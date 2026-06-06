@@ -1,0 +1,181 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+// Auth
+model User {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  password  String
+  role      Role     @default(HR)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum Role {
+  ADMIN
+  HR
+  MANAGER
+}
+
+// Estructura organizacional
+model Department {
+  id        Int        @id @default(autoincrement())
+  name      String     @unique
+  positions Position[]
+  employees Employee[]
+}
+
+model Position {
+  id           Int        @id @default(autoincrement())
+  title        String
+  department   Department @relation(fields: [departmentId], references: [id])
+  departmentId Int
+  employees    Employee[]
+}
+
+// Módulo 2: Personal
+model Employee {
+  id            Int                     @id @default(autoincrement())
+  firstName     String
+  lastName      String
+  email         String                  @unique
+  phone         String?
+  hireDate      DateTime
+  status        EmployeeStatus          @default(ACTIVE)
+  department    Department              @relation(fields: [departmentId], references: [id])
+  departmentId  Int
+  position      Position                @relation(fields: [positionId], references: [id])
+  positionId    Int
+  attendances   Attendance[]
+  vacations     Vacation[]
+  trainings     EmployeeTraining[]
+  evaluations   PerformanceEvaluation[]
+  offboarding   Offboarding?
+  createdAt     DateTime                @default(now())
+  updatedAt     DateTime                @updatedAt
+}
+
+enum EmployeeStatus {
+  ACTIVE
+  INACTIVE
+  ON_LEAVE
+}
+
+// Módulo 1: Reclutamiento
+model JobOpening {
+  id          Int         @id @default(autoincrement())
+  title       String
+  description String?
+  status      JobStatus   @default(OPEN)
+  candidates  Candidate[]
+  createdAt   DateTime    @default(now())
+}
+
+enum JobStatus {
+  OPEN
+  CLOSED
+  ON_HOLD
+}
+
+model Candidate {
+  id           Int             @id @default(autoincrement())
+  firstName    String
+  lastName     String
+  email        String
+  phone        String?
+  resumeUrl    String?
+  status       CandidateStatus @default(PENDING)
+  jobOpening   JobOpening      @relation(fields: [jobOpeningId], references: [id])
+  jobOpeningId Int
+  createdAt    DateTime        @default(now())
+}
+
+enum CandidateStatus {
+  PENDING
+  REVIEWED
+  INTERVIEWED
+  HIRED
+  REJECTED
+}
+
+// Módulo 3: Control Diario
+model Attendance {
+  id         Int              @id @default(autoincrement())
+  employee   Employee         @relation(fields: [employeeId], references: [id])
+  employeeId Int
+  date       DateTime
+  status     AttendanceStatus
+  notes      String?
+  createdAt  DateTime         @default(now())
+}
+
+enum AttendanceStatus {
+  PRESENT
+  ABSENT
+  LATE
+  HALF_DAY
+}
+
+model Vacation {
+  id         Int           @id @default(autoincrement())
+  employee   Employee      @relation(fields: [employeeId], references: [id])
+  employeeId Int
+  startDate  DateTime
+  endDate    DateTime
+  status     RequestStatus @default(PENDING)
+  notes      String?
+  createdAt  DateTime      @default(now())
+}
+
+enum RequestStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+// Módulo 4: Desarrollo
+model Training {
+  id          Int                @id @default(autoincrement())
+  name        String
+  description String?
+  startDate   DateTime
+  endDate     DateTime
+  employees   EmployeeTraining[]
+  createdAt   DateTime           @default(now())
+}
+
+model EmployeeTraining {
+  id         Int      @id @default(autoincrement())
+  employee   Employee @relation(fields: [employeeId], references: [id])
+  employeeId Int
+  training   Training @relation(fields: [trainingId], references: [id])
+  trainingId Int
+  completed  Boolean  @default(false)
+  score      Float?
+}
+
+model PerformanceEvaluation {
+  id         Int      @id @default(autoincrement())
+  employee   Employee @relation(fields: [employeeId], references: [id])
+  employeeId Int
+  score      Float
+  comments   String?
+  period     String
+  createdAt  DateTime @default(now())
+}
+
+// Módulo 5: Salida
+model Offboarding {
+  id         Int      @id @default(autoincrement())
+  employee   Employee @relation(fields: [employeeId], references: [id])
+  employeeId Int      @unique
+  exitDate   DateTime
+  reason     String
+  notes      String?
+  createdAt  DateTime @default(now())
+}
