@@ -179,6 +179,156 @@ async function main() {
     }
   }
 
+  // Asistencia — últimos 30 días
+  const empleados = await prisma.employee.findMany({ take: 100 });
+  const statusAsistencia = ['PRESENT', 'PRESENT', 'PRESENT', 'PRESENT', 'ABSENT', 'LATE', 'HALF_DAY'];
+  let asistenciasCreadas = 0;
+
+  for (const emp of empleados) {
+    for (let d = 1; d <= 30; d++) {
+      const date = new Date();
+      date.setDate(date.getDate() - d);
+      if (date.getDay() === 0 || date.getDay() === 6) continue;
+      try {
+        await prisma.attendance.create({
+          data: {
+            employeeId: emp.id,
+            date,
+            status: random(statusAsistencia),
+            notes: null
+          }
+        });
+        asistenciasCreadas++;
+      } catch { continue; }
+    }
+  }
+  console.log(`✅ ${asistenciasCreadas} registros de asistencia`);
+
+  // Vacaciones
+  const empVac = await prisma.employee.findMany({ take: 60 });
+  const statusVac = ['PENDING', 'APPROVED', 'APPROVED', 'REJECTED'];
+  let vacCreadas = 0;
+
+  for (const emp of empVac) {
+    const start = randomDate(new Date('2024-01-01'), new Date('2025-06-01'));
+    const end = new Date(start);
+    end.setDate(end.getDate() + Math.floor(Math.random() * 14) + 5);
+    try {
+      await prisma.vacation.create({
+        data: {
+          employeeId: emp.id,
+          startDate: start,
+          endDate: end,
+          status: random(statusVac),
+          notes: 'Solicitud de vacaciones anuales'
+        }
+      });
+      vacCreadas++;
+    } catch { continue; }
+  }
+  console.log(`✅ ${vacCreadas} solicitudes de vacaciones`);
+
+  // Capacitaciones
+  const programas = [
+    { name: 'Inducción Corporativa', description: 'Programa de bienvenida para nuevos empleados', days: 5 },
+    { name: 'Seguridad Laboral', description: 'Normas y protocolos de seguridad en el trabajo', days: 3 },
+    { name: 'Liderazgo y Gestión de Equipos', description: 'Desarrollo de habilidades gerenciales', days: 10 },
+    { name: 'Excel Avanzado', description: 'Manejo avanzado de hojas de cálculo', days: 4 },
+    { name: 'Atención al Cliente', description: 'Técnicas de servicio y fidelización', days: 6 },
+    { name: 'Gestión de Proyectos', description: 'Metodologías ágiles y tradicionales', days: 8 },
+    { name: 'Comunicación Efectiva', description: 'Habilidades de comunicación empresarial', days: 3 },
+    { name: 'Normativas Laborales de Panamá', description: 'Código de trabajo y regulaciones locales', days: 4 },
+  ];
+
+  const empTraining = await prisma.employee.findMany({ take: 80 });
+
+  for (const prog of programas) {
+    const start = randomDate(new Date('2024-01-01'), new Date('2025-03-01'));
+    const end = new Date(start);
+    end.setDate(end.getDate() + prog.days);
+
+    const training = await prisma.training.create({
+      data: { name: prog.name, description: prog.description, startDate: start, endDate: end }
+    });
+
+    const participantes = empTraining.sort(() => Math.random() - 0.5).slice(0, Math.floor(Math.random() * 15) + 5);
+    for (const emp of participantes) {
+      try {
+        await prisma.employeeTraining.create({
+          data: {
+            employeeId: emp.id,
+            trainingId: training.id,
+            completed: random([true, true, false]),
+            score: Math.round(Math.random() * 4 + 6)
+          }
+        });
+      } catch { continue; }
+    }
+  }
+  console.log(`✅ ${programas.length} capacitaciones creadas`);
+
+  // Evaluaciones de desempeño
+  const empEval = await prisma.employee.findMany({ take: 120 });
+  const periodos = ['Q1-2024', 'Q2-2024', 'Q3-2024', 'Q4-2024', 'Q1-2025'];
+  const comentarios = [
+    'Excelente desempeño y actitud positiva',
+    'Cumple con los objetivos establecidos',
+    'Necesita mejorar puntualidad',
+    'Supera las expectativas del puesto',
+    'Buen trabajo en equipo',
+    'Requiere capacitación adicional',
+    'Destaca en resolución de problemas',
+    'Cumple satisfactoriamente sus funciones'
+  ];
+
+  let evalCreadas = 0;
+  for (const emp of empEval) {
+    const periodo = random(periodos);
+    try {
+      await prisma.performanceEvaluation.create({
+        data: {
+          employeeId: emp.id,
+          score: Math.round((Math.random() * 4 + 6) * 10) / 10,
+          period: periodo,
+          comments: random(comentarios)
+        }
+      });
+      evalCreadas++;
+    } catch { continue; }
+  }
+  console.log(`✅ ${evalCreadas} evaluaciones creadas`);
+
+  // Salida de personal
+  const motivosSalida = [
+    'Renuncia voluntaria',
+    'Jubilación',
+    'Fin de contrato',
+    'Mutuo acuerdo',
+    'Despido justificado'
+  ];
+
+  const empInactivos = await prisma.employee.findMany({ where: { status: 'ON_LEAVE' }, take: 15 });
+  let salidasCreadas = 0;
+
+  for (const emp of empInactivos) {
+    try {
+      await prisma.offboarding.create({
+        data: {
+          employeeId: emp.id,
+          exitDate: randomDate(new Date('2024-01-01'), new Date('2025-01-01')),
+          reason: random(motivosSalida),
+          notes: 'Proceso completado conforme al código laboral de Panamá'
+        }
+      });
+      await prisma.employee.update({
+        where: { id: emp.id },
+        data: { status: 'INACTIVE' }
+      });
+      salidasCreadas++;
+    } catch { continue; }
+  }
+  console.log(`✅ ${salidasCreadas} registros de salida`);
+
   console.log(`✅ ${candidatosCreados} candidatos creados`);
   console.log('🎉 Seed completado!');
 }
