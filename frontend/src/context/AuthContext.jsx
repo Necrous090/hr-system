@@ -11,15 +11,18 @@ const getSavedUser = () => {
   }
 };
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(getSavedUser);
   const [token, setToken] = useState(() => localStorage.getItem('token'));
 
   const login = (userData, tokenData) => {
-    setUser(userData);
+    const payload = JSON.parse(atob(tokenData.split('.')[1]));
+    const fullUser = { ...userData, role: payload.role };
+    setUser(fullUser);
     setToken(tokenData);
     localStorage.setItem('token', tokenData);
-    localStorage.setItem('user', JSON.stringify(userData));
+    localStorage.setItem('user', JSON.stringify(fullUser));
   };
 
   const logout = () => {

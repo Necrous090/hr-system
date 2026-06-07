@@ -24,7 +24,10 @@ const login = async (req, res) => {
       { expiresIn: '8h' }
     );
 
-    res.json({ token, user: { id: user.id, email: user.email, role: user.role } });
+    res.json({
+      token,
+      user: { id: user.id, email: user.email, role: user.role }
+    });
   } catch (error) {
     res.status(500).json({ error: 'Error interno del servidor' });
   }
@@ -37,12 +40,13 @@ const register = async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     const user = await prisma.user.create({
-      data: { email, password: hashedPassword, role }
+      data: { email, password: hashedPassword, role: role || 'EMPLOYEE' }
     });
 
     res.status(201).json({ id: user.id, email: user.email, role: user.role });
   } catch (error) {
-    res.status(500).json({ error: 'Error interno del servidor' });
+    console.error('Register error:', error.message);
+    res.status(500).json({ error: 'Error interno del servidor', detail: error.message });
   }
 };
 

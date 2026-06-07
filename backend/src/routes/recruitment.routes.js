@@ -6,12 +6,12 @@ const {
   getAllCandidates, createCandidate, updateCandidateStatus
 } = require('../controllers/recruitment.controller');
 
-router.get('/jobs', auth, getAllJobs);
-router.post('/jobs', auth, createJob);
-router.put('/jobs/:id/status', auth, updateJobStatus);
+router.get('/jobs', getAllJobs);
+router.post('/jobs', createJob);
+router.put('/jobs/:id/status', updateJobStatus);
 
-router.get('/candidates', auth, getAllCandidates);
-router.post('/candidates', auth, createCandidate);
-router.put('/candidates/:id/status', auth, updateCandidateStatus);
+router.get('/candidates', getAllCandidates);
+router.post('/candidates', createCandidate);
+router.put('/candidates/:id/status', updateCandidateStatus);
 
 module.exports = router;

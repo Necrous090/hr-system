@@ -11,15 +11,17 @@ model User {
   id        Int      @id @default(autoincrement())
   email     String   @unique
   password  String
-  role      Role     @default(HR)
+  role      Role     @default(EMPLOYEE)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
 
 enum Role {
   ADMIN
-  HR
-  MANAGER
+  HR_MANAGER
+  RECRUITER
+  SUPERVISOR
+  EMPLOYEE
 }
 
 // Estructura organizacional

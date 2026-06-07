@@ -3,8 +3,8 @@ const router = express.Router();
 const auth = require('../middlewares/auth');
 const { getAll, getByEmployee, create } = require('../controllers/performance.controller');
 
-router.get('/', auth, getAll);
-router.get('/employee/:employeeId', auth, getByEmployee);
-router.post('/', auth, create);
+router.get('/', getAll);
+router.get('/employee/:employeeId', getByEmployee);
+router.post('/', create);
 
 module.exports = router;

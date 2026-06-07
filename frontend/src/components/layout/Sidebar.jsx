@@ -1,5 +1,6 @@
-import { NavLink } from 'react-router-dom';
+import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { routePermissions, roleLabels, rolePills } from '../../config/permissions';
 
 const menu = [
   { path: '/', label: 'Dashboard', icon: '📊' },
@@ -15,16 +16,32 @@ const menu = [
 
 const Sidebar = () => {
   const { user, logout } = useAuth();
+  const navigate = useNavigate();
+
+  const filteredMenu = menu.filter(item => {
+    const allowed = routePermissions[item.path];
+    return allowed && user?.role && allowed.includes(user.role);
+  });
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
 
   return (
     <aside className="w-64 bg-gray-900 text-white min-h-screen flex flex-col">
       <div className="p-6 border-b border-gray-700">
         <h1 className="text-lg font-bold">Sistema RRHH</h1>
         <p className="text-gray-400 text-sm mt-1">{user?.email}</p>
+        {user?.role && (
+          <span className={`inline-block mt-2 px-2 py-0.5 rounded-full text-xs font-medium ${rolePills[user.role]}`}>
+            {roleLabels[user.role]}
+          </span>
+        )}
       </div>
 
       <nav className="flex-1 p-4 space-y-1">
-        {menu.map((item) => (
+        {filteredMenu.map((item) => (
           <NavLink
             key={item.path}
             to={item.path}
@@ -45,7 +62,7 @@ const Sidebar = () => {
 
       <div className="p-4 border-t border-gray-700">
         <button
-          onClick={logout}
+          onClick={handleLogout}
           className="w-full text-left text-gray-400 hover:text-white text-sm px-3 py-2 rounded hover:bg-gray-700"
         >
           🚪 Cerrar sesión
